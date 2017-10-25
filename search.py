@@ -3,12 +3,25 @@ import json
 import urllib 
 
 def postSearch(requestedItem):
-	encoded = urllib.parse.urlencode({'query': requestedItem, 'hitsPerPage':'100', 'page':'0'}, safe='/', quote_via=urllib.parse.quote)
-	filters = ['(strata%3A\'grailed\'', 'strata%3A\'hype\'', 'strata%3A\'basic\')']
+	encoded = urllib.parse.urlencode({'query': requestedItem.get('name'), 'hitsPerPage':'100', 'page':'0'}, safe='/', quote_via=urllib.parse.quote)
+	filters2 = '('
+	if requestedItem.get('marketType') == None:
+		# apply all filters
+		print('none')
+	else:
+		# apply specified filters
+		marketSize = len(requestedItem.get('marketType'))
+		marketTypes = requestedItem.get('marketType')
+		for x in range(marketSize-1):
+			#do this
+			filters2 = filters2 + 'strata%3A'+'\''+ marketTypes[x] + '\'%20OR%20'
+		filters2 = filters2 + 'strata%3A' + '\''+marketTypes[marketSize-1] + '\')'
+		print(filters2)
+		print('############################################################')
 	marketplaces = ['grailed','heroine']
 	queryParameters = {'x-algolia-agent': 'Algolia for vanilla JavaScript 3.21.1', 'x-algolia-application-id': 'MNRWEFSS2Q', 'x-algolia-api-key':'a3a4de2e05d9e9b463911705fb6323ad'}
-	filtersConcat = "%20OR%20".join(filters) + '%20AND%20(marketplace%3A' +marketplaces[0]+')'
-
+	filtersConcat = filters2 + '%20AND%20(marketplace%3A' +marketplaces[0]+')' #sizes, tops/pieces filters are appended
+	#filters format: (types of grailed) AND (marketplace) AND (itemfilters)
 	payload = {'params':encoded+'&filters='+filtersConcat}
 	stringLoad = json.dumps(payload)
 	# print(json.dumps(payload))
@@ -21,7 +34,10 @@ def postSearch(requestedItem):
 	return responseDict
 
 def main():
-	searchItem = 'gucci flames'
+	#dictionary with name, filters, etc
+	searchItem = {'name': 'gucci flames', 'marketType':['grailed','basic','hype'], 'itemType':['category_path_size:\'footwear.lowtop_sneakers.10\'']}
+	# print(searchItem.get('itemType')[0])
+	# searchItem = 'gucci flames'
 	results = postSearch(searchItem)
 	for arr in results['hits']:
 		print(arr['id'])
